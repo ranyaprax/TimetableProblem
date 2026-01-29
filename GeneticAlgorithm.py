@@ -11,21 +11,19 @@ class TPGeneticAlgorithm:
         self.generations = generations
         self.selection_method = selection_method
 
-    def initialize_population(pop_size):
+    def initialize_population(pop_size): # Ranya
         return None
 
-    def evaluate_fitness(solution):
+    def evaluate_fitness(solution): # Ranya
         return None
 
-
-    def selection(population):
+    def __selection(self, population:  List[List[int]) -> List[int]: # Sade
         return None
 
-    def crossover(parent1, parent2):
+    def __class_crossover(self, parent1: List[int], parent2: : List[int]) -> Tuple[List[int], List[int]]: # Sade
         return None
 
-    def mutate(solution):
-
+    def __class_mutation(self, solution: List[int]) -> List[int]: # Sade
         return None
 
     def run_ga():
