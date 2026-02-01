@@ -37,6 +37,7 @@ if __name__ == "__main__":
         mutation_rate=0.10,
         tournament_size=10,
         hard_penalty=10,
-        soft_weight=1
+        soft_weight=1,
+        use_student_based_ops=False # Configuration for class-based mutation/cross-over - better performance observed
     )
     scheduler.run_ga()

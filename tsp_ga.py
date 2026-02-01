@@ -11,7 +11,8 @@ class ExamSchedulerGA:
         mutation_rate=0.10,
         tournament_size=10,
         hard_penalty=10,
-        soft_weight=1
+        soft_weight=1,
+        use_student_based_ops=False
     ):
         # Instance attributes
         self.filename = filename
@@ -22,6 +23,7 @@ class ExamSchedulerGA:
         self.TOURNAMENT_SIZE = tournament_size
         self.HARD_PENALTY = hard_penalty
         self.SOFT_WEIGHT = soft_weight
+        self.use_student_based_ops = use_student_based_ops 
 
         # GA state tracking
         self.best_fitness_history = []
@@ -71,7 +73,14 @@ class ExamSchedulerGA:
         tournament.sort(key=lambda s: self.evaluate_fitness(s)[0])
         return tournament[0], tournament[1]
 
+    # --- Crossover ---
     def crossover(self, parent1, parent2):
+        if self.use_student_based_ops:
+            return self.student_based_crossover(parent1, parent2)
+        else:
+            return self.standard_crossover(parent1, parent2)
+
+    def standard_crossover(self, parent1, parent2):
         if random.random() > self.CROSSOVER_RATE:
             return parent1[:], parent2[:]
         point = random.randint(1, self.N - 1)
@@ -79,10 +88,38 @@ class ExamSchedulerGA:
         child2 = parent2[:point] + parent1[point:]
         return child1, child2
 
+    def student_based_crossover(self, parent1, parent2):
+        if random.random() > self.CROSSOVER_RATE:
+            return parent1[:], parent2[:]
+        # Choose a random student
+        student_idx = random.randint(0, self.N - 1)
+        # Swap all class allocations for that student
+        child1 = parent1[:]
+        child2 = parent2[:]
+        child1[student_idx], child2[student_idx] = parent2[student_idx], parent1[student_idx]
+        return child1, child2
+
+    # --- Mutation ---
     def mutate(self, solution):
+        if self.use_student_based_ops:
+            self.class_swap_mutation(solution)
+        else:
+            self.standard_mutation(solution)
+
+    def standard_mutation(self, solution):
         for i in range(len(solution)):
             if random.random() < self.MUTATION_RATE:
                 solution[i] = random.randint(1, self.K)
+
+    def class_swap_mutation(self, solution):
+        for student_idx in range(self.N):  # for each student
+            if random.random() < self.MUTATION_RATE:
+                # Find all exams student is in
+                exam_indices = [exam_idx for exam_idx in range(self.M) if self.E[exam_idx][student_idx] == 1]
+                if len(exam_indices) > 1:
+                    a, b = random.sample(exam_indices, 2)
+                    solution[a], solution[b] = solution[b], solution[a]
+
 
     def run_ga(self):
         population = self.initialize_population()
