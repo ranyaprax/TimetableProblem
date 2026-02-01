@@ -55,7 +55,7 @@ N = 30   # Number of exams
 2. **Run the GA**:
 
 ```bash
-python your_script.py
+python __main__.py
 ```
 
 The GA will:
