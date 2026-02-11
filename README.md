@@ -123,12 +123,26 @@ E[M-1][0] E[M-1][1] ... E[M-1][N-1]
 
 * **Best solution** (optional print, currently commented out in code):
 
-```python
-# Best solution (exam → time slot)
-# Fitness
-# Hard constraint violations
-# Soft constraint cost
-```
+solution = [s_1, s_2, ..., s_N]
+
+Length: N → the number of exams.
+
+Each element s_j is an integer in [1, K] representing the time slot assigned to exam j.
+
+Example for N = 5 exams and K = 3 slots:
+
+solution = [1, 3, 2, 1, 3]
+
+
+Exam 1 → Slot 1
+
+Exam 2 → Slot 3
+
+Exam 3 → Slot 2
+
+Exam 4 → Slot 1
+
+Exam 5 → Slot 3
 
 ---
 
