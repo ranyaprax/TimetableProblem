@@ -1,5 +1,7 @@
 import random
 import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
 
 class ExamSchedulerGA:
     def __init__(
@@ -120,6 +122,39 @@ class ExamSchedulerGA:
                     a, b = random.sample(exam_indices, 2)
                     solution[a], solution[b] = solution[b], solution[a]
 
+    def visualize_best_solution(self, solution):
+        timetable = np.full((self.N, self.K), np.nan)  # N exams x K timeslots
+
+        for exam_idx, slot in enumerate(solution):
+            if 1 <= slot <= self.K:
+                timetable[exam_idx][slot - 1] = exam_idx + 1
+            else:
+                print(f"Warning: exam {exam_idx} has invalid slot {slot}")
+
+        annot_matrix = np.full(timetable.shape, '', dtype=object)
+        for i in range(self.N):
+            for j in range(self.K):
+                if not np.isnan(timetable[i, j]):
+                    annot_matrix[i, j] = str(int(timetable[i, j]))
+
+        plt.figure(figsize=(14, 8))
+        sns.heatmap(
+            timetable,
+            annot=annot_matrix,
+            fmt='',
+            cmap="tab20",
+            cbar=True,
+            linewidths=0.8,
+            linecolor='gray',
+            square=False
+        )
+
+        plt.xlabel("Time Slot")
+        plt.ylabel("Exam")
+        plt.title("Exam Schedule (Best Solution)")
+        plt.xticks(ticks=np.arange(self.K) + 0.5, labels=np.arange(1, self.K + 1))
+        plt.yticks(ticks=np.arange(self.N) + 0.5, labels=np.arange(1, self.N + 1), rotation=0)
+        plt.show()
 
     def run_ga(self):
         population = self.initialize_population()
@@ -177,6 +212,7 @@ class ExamSchedulerGA:
         print("Solution:", best_hard_solution)
 
         self.plot_results()
+        self.visualize_best_solution(best_hard_solution)
 
 
     def plot_results(self):
