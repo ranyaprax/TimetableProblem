@@ -123,13 +123,21 @@ class ExamSchedulerGA:
 
     def run_ga(self):
         population = self.initialize_population()
-        best_solution = None
+
+        # Track best by fitness (existing behavior)
         best_fitness = float("inf")
+
+        # NEW: Track best by least hard violations
+        best_hard_solution = None
+        best_hard_violations = float("inf")
+        best_hard_soft_cost = None
+        best_hard_generation = None
 
         for gen in range(self.GENERATIONS):
             population.sort(key=lambda s: self.evaluate_fitness(s)[0])
 
             best_fit, best_hard, best_soft = self.evaluate_fitness(population[0])
+
             self.best_fitness_history.append(best_fit)
             self.best_hard_history.append(best_hard)
             self.best_soft_history.append(best_soft)
@@ -137,10 +145,21 @@ class ExamSchedulerGA:
             total_fitness = sum(self.evaluate_fitness(sol)[0] for sol in population)
             self.avg_fitness_history.append(total_fitness / len(population))
 
+            # ----- NEW: Track least hard violations -----
+            for sol in population:
+                fitness, hard, soft = self.evaluate_fitness(sol)
+
+                if hard < best_hard_violations or (
+                    hard == best_hard_violations and fitness < best_fitness
+                ):
+                    best_hard_solution = sol[:]
+                    best_hard_violations = hard
+                    best_hard_soft_cost = soft
+                    best_hard_generation = gen
+
             # Elitism: keep top 2
             new_population = population[:2]
 
-            # Generate new offspring
             while len(new_population) < self.POPULATION_SIZE:
                 p1, p2 = self.select_parents(population)
                 c1, c2 = self.crossover(p1, p2)
@@ -150,7 +169,15 @@ class ExamSchedulerGA:
 
             population = new_population[:self.POPULATION_SIZE]
 
+        # ---- PRINT BEST SOLUTION FOUND (LEAST HARD VIOLATIONS) ----
+        print("\nBest Solution (Least Hard Constraint Violations):")
+        print("Generation:", best_hard_generation)
+        print("Hard Violations:", best_hard_violations)
+        print("Soft Cost:", best_hard_soft_cost)
+        print("Solution:", best_hard_solution)
+
         self.plot_results()
+
 
     def plot_results(self):
         plt.figure()
