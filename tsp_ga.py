@@ -12,7 +12,7 @@ class ExamSchedulerGA:
         crossover_rate=0.8,
         mutation_rate=0.10,
         tournament_size=10,
-        hard_penalty=10,
+        hard_penalty=1000,
         soft_weight=1,
         use_student_based_ops=False
     ):
@@ -38,9 +38,16 @@ class ExamSchedulerGA:
 
     def read_instance(self, filename):
         with open(filename, "r") as f:
-            M, N, K = map(int, f.readline().split())
+            N, K, M = map(int, f.readline().split())
             E = [list(map(int, f.readline().split())) for _ in range(M)]
+
+        # Optional safety check
+        for row in E:
+            if len(row) != N:
+                raise ValueError("Each student row must have exactly N exam columns.")
+
         return M, N, K, E
+
 
     def initialize_population(self):
         return [[random.randint(1, self.K) for _ in range(self.N)]
@@ -93,12 +100,20 @@ class ExamSchedulerGA:
     def student_based_crossover(self, parent1, parent2):
         if random.random() > self.CROSSOVER_RATE:
             return parent1[:], parent2[:]
+
         # Choose a random student
-        student_idx = random.randint(0, self.N - 1)
-        # Swap all class allocations for that student
+        student_idx = random.randint(0, self.M - 1)
+
+        # Get exams that student is enrolled in
+        exam_indices = [j for j in range(self.N) if self.E[student_idx][j] == 1]
+
         child1 = parent1[:]
         child2 = parent2[:]
-        child1[student_idx], child2[student_idx] = parent2[student_idx], parent1[student_idx]
+
+        # Swap all those exam slots
+        for j in exam_indices:
+            child1[j], child2[j] = parent2[j], parent1[j]
+
         return child1, child2
 
     # --- Mutation ---
@@ -114,13 +129,14 @@ class ExamSchedulerGA:
                 solution[i] = random.randint(1, self.K)
 
     def class_swap_mutation(self, solution):
-        for student_idx in range(self.N):  # for each student
+        for student_idx in range(self.M):  # iterate over students
             if random.random() < self.MUTATION_RATE:
-                # Find all exams student is in
-                exam_indices = [exam_idx for exam_idx in range(self.M) if self.E[exam_idx][student_idx] == 1]
+                # Find all exams this student is in
+                exam_indices = [exam_idx for exam_idx in range(self.N) if self.E[student_idx][exam_idx] == 1]
                 if len(exam_indices) > 1:
                     a, b = random.sample(exam_indices, 2)
                     solution[a], solution[b] = solution[b], solution[a]
+
 
     def visualize_best_solution(self, solution):
         timetable = np.full((self.N, self.K), np.nan)  # N exams x K timeslots
@@ -203,16 +219,22 @@ class ExamSchedulerGA:
                 new_population.extend([c1, c2])
 
             population = new_population[:self.POPULATION_SIZE]
+        
+        return {
+            "hard_violations": best_hard_violations,
+            "soft_cost": best_hard_soft_cost
+        }
 
-        # ---- PRINT BEST SOLUTION FOUND (LEAST HARD VIOLATIONS) ----
-        print("\nBest Solution (Least Hard Constraint Violations):")
-        print("Generation:", best_hard_generation)
-        print("Hard Violations:", best_hard_violations)
-        print("Soft Cost:", best_hard_soft_cost)
-        print("Solution:", best_hard_solution)
 
-        self.plot_results()
-        self.visualize_best_solution(best_hard_solution)
+        # # ---- PRINT BEST SOLUTION FOUND (LEAST HARD VIOLATIONS) ----
+        # print("\nBest Solution (Least Hard Constraint Violations):")
+        # print("Generation:", best_hard_generation)
+        # print("Hard Violations:", best_hard_violations)
+        # print("Soft Cost:", best_hard_soft_cost)
+        # print("Solution:", best_hard_solution)
+
+        # self.plot_results()
+        # self.visualize_best_solution(best_hard_solution)
 
 
     def plot_results(self):
