@@ -14,7 +14,8 @@ class ExamSchedulerGA:
         tournament_size=10,
         hard_penalty=1000,
         soft_weight=1,
-        use_student_based_ops=False
+        use_student_based_ops=False,
+        plot=False
     ):
         # Instance attributes
         self.filename = filename
@@ -26,6 +27,7 @@ class ExamSchedulerGA:
         self.HARD_PENALTY = hard_penalty
         self.SOFT_WEIGHT = soft_weight
         self.use_student_based_ops = use_student_based_ops 
+        self.plot = plot
 
         # GA state tracking
         self.best_fitness_history = []
@@ -219,22 +221,22 @@ class ExamSchedulerGA:
                 new_population.extend([c1, c2])
 
             population = new_population[:self.POPULATION_SIZE]
+
+                # # ---- PRINT BEST SOLUTION FOUND (LEAST HARD VIOLATIONS) ----
+        if(self.plot) :
+            print("\nBest Solution (Least Hard Constraint Violations):")
+            print("Generation:", best_hard_generation)
+            print("Hard Violations:", best_hard_violations)
+            print("Soft Cost:", best_hard_soft_cost)
+            print("Solution:", best_hard_solution)
+
+            self.plot_results()
+            self.visualize_best_solution(best_hard_solution)    
         
         return {
             "hard_violations": best_hard_violations,
             "soft_cost": best_hard_soft_cost
         }
-
-
-        # # ---- PRINT BEST SOLUTION FOUND (LEAST HARD VIOLATIONS) ----
-        # print("\nBest Solution (Least Hard Constraint Violations):")
-        # print("Generation:", best_hard_generation)
-        # print("Hard Violations:", best_hard_violations)
-        # print("Soft Cost:", best_hard_soft_cost)
-        # print("Solution:", best_hard_solution)
-
-        # self.plot_results()
-        # self.visualize_best_solution(best_hard_solution)
 
 
     def plot_results(self):
